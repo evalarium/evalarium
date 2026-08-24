@@ -131,25 +131,6 @@ importers:
 
   apps/inspector: {}
 
-  environments/twenty-crm:
-    dependencies:
-      '@evalarium/core':
-        specifier: workspace:0.0.0
-        version: link:../../packages/core
-      '@evalarium/verify':
-        specifier: workspace:0.0.0
-        version: link:../../packages/verify
-    devDependencies:
-      '@evalarium/capture':
-        specifier: workspace:0.0.0
-        version: link:../../packages/capture
-      '@evalarium/config':
-        specifier: workspace:0.0.0
-        version: link:../../packages/config
-      playwright-core:
-        specifier: 1.62.1
-        version: 1.62.1
-
   fixtures/demo-shop:
     dependencies:
       '@evalarium/core':
