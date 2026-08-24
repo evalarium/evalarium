@@ -1,0 +1,98 @@
+:root {
+  color: #17211b;
+  background: #f4f0e8;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  width: min(64rem, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.shop-header {
+  border-bottom: 1px solid #7d8b7f;
+  margin-bottom: 2rem;
+}
+
+.shop-header h1 {
+  margin: 0.25rem 0;
+  font-size: 2.5rem;
+}
+
+.eyebrow {
+  color: #53665a;
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.08rem;
+  text-transform: uppercase;
+}
+
+.store-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(14rem, 1fr);
+  gap: 2rem;
+}
+
+.products {
+  display: grid;
+  gap: 1rem;
+}
+
+.product-card,
+.cart-summary,
+.order-success {
+  border: 1px solid #7d8b7f;
+  border-radius: 0.75rem;
+  background: #fffdf7;
+  padding: 1.25rem;
+}
+
+.product-card strong {
+  display: block;
+  margin: 1rem 0;
+  font-size: 1.5rem;
+}
+
+button {
+  border: 0;
+  border-radius: 0.5rem;
+  background: #235c3b;
+  color: white;
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  font: inherit;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.order-success {
+  margin-top: 1.5rem;
+  border-color: #235c3b;
+}
+
+.toast-message {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  border-radius: 0.5rem;
+  background: #17211b;
+  color: white;
+  padding: 0.75rem 1rem;
+}
+
+@media (max-width: 42rem) {
+  .store-layout {
+    grid-template-columns: 1fr;
+  }
+}

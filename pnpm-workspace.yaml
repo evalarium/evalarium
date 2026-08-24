@@ -1,0 +1,13 @@
+packages:
+  - apps/*
+  - packages/*
+  - environments/*
+  - fixtures/*
+
+allowBuilds:
+  better-sqlite3: true
+  esbuild: true
+  tls-impersonate: false
+
+overrides:
+  esbuild: 0.28.2

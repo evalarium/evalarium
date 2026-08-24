@@ -1,0 +1,29 @@
+{
+  "name": "@evalarium/capture",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src test --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@evalarium/core": "workspace:0.0.0",
+    "better-sqlite3": "13.0.3",
+    "playwright-core": "1.62.1"
+  },
+  "devDependencies": {
+    "@evalarium/config": "workspace:0.0.0",
+    "@types/better-sqlite3": "9.6.0"
+  }
+}

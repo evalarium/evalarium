@@ -1,0 +1,25 @@
+{
+  "name": "@evalarium/adapter-browsergym",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --max-warnings 0"
+  },
+  "dependencies": {
+    "@evalarium/runtime": "workspace:0.0.0"
+  },
+  "devDependencies": {
+    "@evalarium/config": "workspace:0.0.0"
+  }
+}

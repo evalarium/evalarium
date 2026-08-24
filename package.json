@@ -1,0 +1,40 @@
+{
+  "name": "evalarium",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @evalarium/hub dev",
+    "boundaries": "node scripts/check-boundaries.mjs",
+    "build": "pnpm boundaries && turbo run build",
+    "typecheck": "pnpm boundaries && turbo run typecheck",
+    "lint": "turbo run lint && eslint scripts packages apps fixtures --max-warnings 0",
+    "lint:fix": "eslint scripts packages apps fixtures --fix --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "turbo run test && vitest run api/subscribe.test.js",
+    "e2e": "pnpm build && node scripts/e2e.mjs",
+    "docker:smoke": "pnpm build && node scripts/docker-smoke.mjs",
+    "changeset": "changeset",
+    "prepare": "node scripts/install-hooks.mjs"
+  },
+  "devDependencies": {
+    "@changesets/cli": "3.0.0",
+    "@eslint/js": "9.39.5",
+    "@types/node": "22.20.1",
+    "eslint": "9.39.5",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "prettier": "3.9.6",
+    "tsup": "8.5.1",
+    "turbo": "2.10.10",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.67.0",
+    "vitest": "4.1.10"
+  }
+}

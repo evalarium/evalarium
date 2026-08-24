@@ -1,0 +1,23 @@
+{
+  "name": "@evalarium/shims",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "types": "./dist/types.d.ts",
+  "exports": {
+    "./iife": "./dist/shim.global.js",
+    "./types": {
+      "types": "./dist/types.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup && tsc --emitDeclarationOnly",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src test --max-warnings 0",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@evalarium/config": "workspace:0.0.0",
+    "@evalarium/core": "workspace:0.0.0"
+  }
+}

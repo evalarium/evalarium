@@ -1,0 +1,23 @@
+{
+  "name": "@evalarium/eval-runner",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "evalarium-eval": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --max-warnings 0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.117.1",
+    "@evalarium/runtime": "workspace:0.0.0",
+    "@evalarium/verify": "workspace:0.0.0",
+    "commander": "15.0.0"
+  },
+  "devDependencies": {
+    "@evalarium/config": "workspace:0.0.0"
+  }
+}

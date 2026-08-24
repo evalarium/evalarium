@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.turbo/
+coverage/
+*.evalrec/
+*.evalbundle/
+.DS_Store
+.vercel/
+.vercel
+
+# compiled environment artifacts stay out of git
+environments/*/artifacts/
+
+# local secrets
+.env.local

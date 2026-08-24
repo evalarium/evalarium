@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.2
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.22.0 --activate
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Static validation
+        run: |
+          pnpm lint
+          pnpm format:check
+          pnpm typecheck
+          pnpm audit --audit-level critical
+
+      - name: Unit and integration tests
+        run: pnpm test
+
+      - name: Offline replay proof
+        run: pnpm e2e
+
+      - name: Docker control and CDP smoke
+        run: pnpm docker:smoke

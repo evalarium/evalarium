@@ -1,0 +1,32 @@
+{
+  "name": "@evalarium/fixture-demo-shop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup && vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src scripts tasks vite.config.ts --max-warnings 0",
+    "serve": "node dist/server/index.js"
+  },
+  "dependencies": {
+    "@evalarium/core": "workspace:0.0.0",
+    "@evalarium/verify": "workspace:0.0.0",
+    "express": "5.2.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@babel/core": "7.29.7",
+    "@evalarium/capture": "workspace:0.0.0",
+    "@evalarium/config": "workspace:0.0.0",
+    "@rolldown/plugin-babel": "0.2.3",
+    "@types/babel__core": "7.20.5",
+    "@types/express": "5.0.6",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "@vitejs/plugin-react": "6.0.5",
+    "babel-plugin-react-compiler": "1.0.0",
+    "vite": "8.2.1"
+  }
+}

@@ -1,0 +1,19 @@
+Evalarium
+Copyright 2026 The Evalarium Authors
+
+Licensed under the Apache License, Version 2.0 (the "License"); see the
+LICENSE file at the repository root.
+
+Open-core scope: the License covers the Evalarium toolchain — the
+workspaces under packages/, apps/, fixtures/, and scripts/ — together with
+the repository documentation at the root. The environments/ and wiki/
+directories of the private monorepo (normalization-rules corpora, capture
+and seed scripts, tasks, and compiled environment artifacts for real
+third-party applications) are proprietary, are not part of the public
+distribution, and are excluded from the public export by
+scripts/export-public.sh.
+
+Frozen environment bundles are built from third-party applications and are
+distributed (or withheld) under those applications' own licenses:
+Twenty CRM is AGPL-3.0 (bundles are private, demonstration-only);
+Medusa is MIT (bundles may be redistributed with upstream's license text).

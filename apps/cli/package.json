@@ -1,0 +1,27 @@
+{
+  "name": "@evalarium/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "evalarium": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src test --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@evalarium/capture": "workspace:0.0.0",
+    "@evalarium/compiler": "workspace:0.0.0",
+    "@evalarium/core": "workspace:0.0.0",
+    "@evalarium/proxy": "workspace:0.0.0",
+    "@evalarium/runtime": "workspace:0.0.0",
+    "@evalarium/verify": "workspace:0.0.0",
+    "commander": "15.0.0"
+  },
+  "devDependencies": {
+    "@evalarium/config": "workspace:0.0.0"
+  }
+}
