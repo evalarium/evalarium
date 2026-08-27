@@ -37,10 +37,10 @@ const demoPosterUrl =
   'https://mdaoqtxuzvgp0h2j.public.blob.vercel-storage.com/videos/evalarium-demo-v1-poster.jpg';
 
 // The Vercel function at api/subscribe.js forwards signups to
-// gordon@evalarium.ai via Resend (RESEND_API_KEY in the project env;
+// martin@evalarium.ai via Resend (RESEND_API_KEY in the project env;
 // evalarium.ai is a verified Resend domain).
 const emailFormAction: string | null = '/api/subscribe';
-const contactEmail = 'gordon@evalarium.ai';
+const contactEmail = 'martin@evalarium.ai';
 
 const buyerProblems = [
   {
@@ -656,7 +656,7 @@ export function App() {
               </div>
             )}
             <a href={`mailto:${contactEmail}?subject=Evalarium%20pilot`}>
-              Or email Gordon directly <ArrowIcon />
+              Or email Martin directly <ArrowIcon />
             </a>
           </div>
         </section>
@@ -687,10 +687,10 @@ export function App() {
         </a>
         <p>Real apps. Reliable runs.</p>
         <div className="footer-links">
-          <a href="mailto:gordon@evalarium.ai">gordon@evalarium.ai</a>
+          <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
           <a href="#privacy">Privacy</a>
-          <a href="https://sabercrown.com" target="_blank" rel="noreferrer">
-            Powered by sabercrown.com
+          <a href="https://kontsek.io" target="_blank" rel="noreferrer">
+            Powered by kontsek.io
           </a>
         </div>
       </footer>

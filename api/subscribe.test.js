@@ -75,9 +75,12 @@ describe('pilot inquiry endpoint', () => {
     expect(fetch).toHaveBeenCalledOnce();
     const [, options] = fetch.mock.calls[0];
     const payload = JSON.parse(options.body);
+    expect(payload.from).toBe('Martin at Evalarium <martin@evalarium.ai>');
+    expect(payload.to).toEqual(['martin@evalarium.ai']);
     expect(payload.subject).toContain(inquiry.email);
     expect(payload.text).toContain(inquiry.company);
     expect(payload.text).toContain(inquiry.useCase);
+    expect(response.body).toContain('Martin will reply');
   });
 
   it('fails safely when Resend is not configured', async () => {
@@ -86,6 +89,7 @@ describe('pilot inquiry endpoint', () => {
     await handler({ method: 'POST', headers: {}, body: inquiry }, response);
 
     expect(response.statusCode).toBe(503);
+    expect(response.body).toContain('martin@evalarium.ai');
     expect(fetch).not.toHaveBeenCalled();
   });
 });

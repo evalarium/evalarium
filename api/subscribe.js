@@ -1,8 +1,8 @@
 // Pilot-inquiry endpoint for the hub landing page. A plain form POST lands
 // here; each qualified inquiry is forwarded as an email via Resend so it
-// arrives in the gordon@evalarium.ai inbox without a CRM or list provider.
+// arrives in the martin@evalarium.ai inbox without a CRM or list provider.
 // Requires RESEND_API_KEY in the Vercel project environment; sender and
-// recipient are both gordon@evalarium.ai (the Resend-verified address).
+// recipient are both martin@evalarium.ai (the Resend-verified domain).
 // The production route is also protected by a Vercel WAF rate-limit rule.
 
 const page = (title, body) => `<!doctype html>
@@ -74,7 +74,7 @@ export default async function handler(request, response) {
       .send(
         page(
           'Signups are not wired up yet',
-          'Email gordon@evalarium.ai instead.',
+          'Email martin@evalarium.ai instead.',
         ),
       );
     return;
@@ -86,8 +86,8 @@ export default async function handler(request, response) {
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Evalarium <gordon@evalarium.ai>',
-      to: ['gordon@evalarium.ai'],
+      from: 'Martin at Evalarium <martin@evalarium.ai>',
+      to: ['martin@evalarium.ai'],
       subject: `Evalarium pilot inquiry: ${email}`,
       text:
         `Email: ${email}\n` +
@@ -101,7 +101,7 @@ export default async function handler(request, response) {
       .send(
         page(
           'Something went sideways',
-          'Email gordon@evalarium.ai and we will add you by hand.',
+          'Email martin@evalarium.ai and we will add you by hand.',
         ),
       );
     return;
@@ -111,7 +111,7 @@ export default async function handler(request, response) {
     .send(
       page(
         'Pilot inquiry received',
-        'Gordon will reply with a concrete capture plan.',
+        'Martin will reply with a concrete capture plan.',
       ),
     );
 }
