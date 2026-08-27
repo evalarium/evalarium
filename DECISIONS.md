@@ -2,6 +2,12 @@
 
 Every non-trivial scaffold decision is recorded here. Newest entries appear first.
 
+## 2026-08-27 — Give the public checkout a separate local port range
+
+- **Decision:** Keep the private source checkout on Hub `5173`, control API `3900`, public CDP relay `3922`, and derived loopback browser endpoint `3923`. `scripts/export-public.sh` rewrites those host-facing defaults in the generated public tree to `5174`, `3901`, `3924`, and `3925`, respectively.
+- **Reason:** The private source and public export are commonly present on the same workstation. Distinct defaults let both repositories run simultaneously and keep the cross-project port inventory collision-free.
+- **Consequence:** The generated public Docker interface, CLI defaults, BrowserGym example, Docker smoke test, and Hub config use the public checkout's range. Callers can still override the control and CDP ports explicitly.
+
 ## 2026-08-23 — Pin collision-free local service ports
 
 - **Decision:** Pin the Hub to Vite `5173` with `strictPort`, keep the frozen-environment control API on `3900`, and move its public CDP relay from Chrome's conventional `9222` to Evalarium's `3922` slot (with the derived loopback browser endpoint on `3923`).

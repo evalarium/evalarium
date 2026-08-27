@@ -2,11 +2,11 @@
 # frozen environment bundle:
 #
 #   docker build -f packages/packager/docker/Dockerfile -t evalarium-env .
-#   docker run --rm -p 3900:3900 -p 3922:3922 \
+#   docker run --rm -p 3901:3901 -p 3924:3924 \
 #     -v /path/to/name.evalbundle:/bundle:ro evalarium-env
 #
-# The control API listens on 3900 and the frozen browser's CDP endpoint on
-# 3922; agents attach over CDP (see packages/adapter-browsergym/python).
+# The control API listens on 3901 and the frozen browser's CDP endpoint on
+# 3924; agents attach over CDP (see packages/adapter-browsergym/python).
 
 FROM node:22-bookworm-slim AS build
 RUN apt-get update \
@@ -30,6 +30,6 @@ ENV EVALARIUM_CHROMIUM_PATH=/usr/bin/chromium \
     NODE_ENV=production
 WORKDIR /evalarium
 COPY --from=build /deploy .
-EXPOSE 3900 3922
+EXPOSE 3901 3924
 ENTRYPOINT ["dumb-init", "node", "dist/index.js"]
-CMD ["serve", "/bundle", "--host", "0.0.0.0", "--port", "3900", "--cdp-port", "3922"]
+CMD ["serve", "/bundle", "--host", "0.0.0.0", "--port", "3901", "--cdp-port", "3924"]

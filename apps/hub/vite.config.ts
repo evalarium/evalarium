@@ -2,7 +2,7 @@ import babel from '@rolldown/plugin-babel';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-const HUB_PORT = 5173;
+const HUB_PORT = 5174;
 
 export default defineConfig({
   build: {

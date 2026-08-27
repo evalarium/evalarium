@@ -3,14 +3,14 @@
 Run the environment first (locally or via docker):
 
     evalarium serve twenty-crm/pipeline-review.evalbundle \
-        --host 0.0.0.0 --port 3900 --cdp-port 3922
+        --host 0.0.0.0 --port 3901 --cdp-port 3924
 
 Then drive it from Python. The browser is reachable over CDP, so any
 Playwright-based agent stack (BrowserGym included) can attach to it:
 
     from evalarium_browsergym import EvalariumEnv
 
-    env = EvalariumEnv("http://localhost:3900", "http://localhost:3922")
+    env = EvalariumEnv("http://localhost:3901", "http://localhost:3924")
     observation = env.reset(fixture="pipeline-review", seed=42)
     page = env.page  # Playwright page attached over CDP
     page.click("text=Tasks")

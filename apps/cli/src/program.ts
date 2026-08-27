@@ -48,8 +48,8 @@ export const createProgram = (): Command => {
   program
     .command('serve')
     .argument('<bundle>')
-    .option('--port <port>', 'control API port', '3900')
-    .option('--cdp-port <port>', 'Chrome DevTools protocol port', '3922')
+    .option('--port <port>', 'control API port', '3901')
+    .option('--cdp-port <port>', 'Chrome DevTools protocol port', '3924')
     .option('--host <host>', 'bind address', '127.0.0.1')
     .option('--headed', 'show the environment browser window')
     .action(serveCommand);

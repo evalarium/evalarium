@@ -24,6 +24,8 @@ Set `EVALARIUM_CHROMIUM_PATH` if Chrome is not installed in a standard location.
 
 The end-to-end command starts the bundled demo shop, records a scripted checkout, stops the origin, compiles the recording, and runs replay, verification, and five determinism episodes fully offline.
 
+The private source checkout uses `5173` for the Hub, `3900` for the frozen-environment control API, and `3922` for its public CDP relay; the relay starts Chromium on loopback-only `3923`. `scripts/export-public.sh` assigns the generated public checkout `5174`, `3901`, `3924`, and `3925`, respectively, so both repositories can run simultaneously.
+
 ## Architecture
 
 ```text
