@@ -32,7 +32,7 @@ const claims = [
 ];
 
 const demoVideoUrl =
-  'https://mdaoqtxuzvgp0h2j.public.blob.vercel-storage.com/videos/evalarium-demo-v1.mp4';
+  'https://mdaoqtxuzvgp0h2j.public.blob.vercel-storage.com/videos/evalarium-demo-v2.mp4';
 const demoPosterUrl =
   'https://mdaoqtxuzvgp0h2j.public.blob.vercel-storage.com/videos/evalarium-demo-v1-poster.jpg';
 
@@ -366,7 +366,7 @@ export function App() {
                 Start a paid pilot <ArrowIcon />
               </a>
               <a className="text-link" href="#measured">
-                Watch the 87-second demo <span>↓</span>
+                Watch the 84-second demo <span>↓</span>
               </a>
             </div>
           </div>
@@ -522,7 +522,7 @@ export function App() {
           </div>
           <div className="video-heading">
             <span className="live-pill">
-              <i /> 87-second demo
+              <i /> 84-second demo
             </span>
             <p>
               A live CRM, its backend killed on camera, and the frozen copy
