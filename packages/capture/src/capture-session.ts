@@ -34,6 +34,7 @@ export interface CaptureSessionOptions {
   readonly script: CaptureScript;
   readonly sessionId?: string;
   readonly executablePath?: string;
+  readonly headless?: boolean;
   readonly viewport?: Viewport;
   readonly normalizationRules?: NormalizationRules;
   readonly onSessionReady?: () => void | Promise<void>;
@@ -56,7 +57,7 @@ export const captureSession = async (
   );
   const browser = await chromium.launch({
     executablePath,
-    headless: true,
+    headless: options.headless ?? true,
     proxy: { server: options.proxyUrl },
     args: [
       '--disable-background-networking',

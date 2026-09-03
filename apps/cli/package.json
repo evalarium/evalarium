@@ -16,6 +16,8 @@
     "@evalarium/capture": "workspace:0.0.0",
     "@evalarium/compiler": "workspace:0.0.0",
     "@evalarium/core": "workspace:0.0.0",
+    "@evalarium/inspector": "workspace:0.0.0",
+    "@evalarium/mcp": "workspace:0.0.0",
     "@evalarium/proxy": "workspace:0.0.0",
     "@evalarium/runtime": "workspace:0.0.0",
     "@evalarium/verify": "workspace:0.0.0",

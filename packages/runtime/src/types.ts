@@ -1,6 +1,7 @@
 import type {
   BundleManifest,
   DivergenceEvent,
+  EpisodeObservation,
   ReplayCoverage,
   ReplayRequestLogEntry,
 } from '@evalarium/core';
@@ -14,12 +15,7 @@ export const RUNTIME_CLOCK_MODE = {
 export type RuntimeClockMode =
   (typeof RUNTIME_CLOCK_MODE)[keyof typeof RUNTIME_CLOCK_MODE];
 
-export interface Observation {
-  readonly url: string;
-  readonly title: string;
-  readonly a11ySnapshot: string;
-  readonly domDigest: string;
-}
+export type Observation = EpisodeObservation;
 
 export interface OpenEnvironmentOptions {
   readonly clockMode?: RuntimeClockMode;

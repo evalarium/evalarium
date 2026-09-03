@@ -1,10 +1,12 @@
 import { spawn } from 'node:child_process';
 
+import { EPISODE_SCHEMA_VERSION } from '@evalarium/core';
 import type { EnvironmentHandle } from '@evalarium/runtime';
 import type { TaskDefinition } from '@evalarium/verify';
 
 import {
   applyAction,
+  createStepRecorder,
   observationText,
   summarizeNetwork,
   type EpisodeRecord,
@@ -133,6 +135,7 @@ export const runClaudeCodeEpisode = async (
   const startedAt = new Date().toISOString();
   await handle.reset(task.fixture, options.seed);
   const steps: EpisodeStep[] = [];
+  const recordStep = createStepRecorder(handle);
   const usage = { inputTokens: 0, outputTokens: 0, cacheReadInputTokens: 0 };
   let finished = false;
   let sessionId: string | undefined;
@@ -151,11 +154,13 @@ export const runClaudeCodeEpisode = async (
       } catch {
         // Persistent CLI failure ends the episode; the reward reflects
         // whatever the agent achieved before it.
-        steps.push({
-          observation: await handle.observe(),
-          actions: [],
-          commentary: `cli error: ${(firstError as Error).message.slice(0, 200)}`,
-        });
+        steps.push(
+          recordStep(
+            await handle.observe(),
+            [],
+            `cli error: ${(firstError as Error).message.slice(0, 200)}`,
+          ),
+        );
         break;
       }
     }
@@ -167,11 +172,7 @@ export const runClaudeCodeEpisode = async (
     const action = parseAction(text);
 
     if (action === null || typeof action.action !== 'string') {
-      steps.push({
-        observation: await handle.observe(),
-        actions: [],
-        commentary: text.slice(0, 500),
-      });
+      steps.push(recordStep(await handle.observe(), [], text.slice(0, 500)));
       prompt =
         'That was not a single JSON action. Respond with exactly one JSON ' +
         'object: {"action":"click"|"fill"|"finish",...}.';
@@ -182,26 +183,30 @@ export const runClaudeCodeEpisode = async (
     const actions = [{ name, ...action }];
     if (name === 'finish') {
       finished = true;
-      steps.push({
-        observation: await handle.observe(),
-        actions,
-        commentary: String(action.summary ?? ''),
-      });
+      steps.push(
+        recordStep(
+          await handle.observe(),
+          actions,
+          String(action.summary ?? ''),
+        ),
+      );
       break;
     }
     const outcome = await applyAction(handle, name, action);
     const observation = await handle.observe();
-    steps.push({ observation, actions, commentary: text.slice(0, 300) });
+    steps.push(recordStep(observation, actions, text.slice(0, 300)));
     prompt = `${outcome}\n\nNew page state:\n${observationText(observation)}`;
   }
 
   const reward = await options.verify();
   return {
+    schemaVersion: EPISODE_SCHEMA_VERSION,
     taskId: task.id,
     fixture: task.fixture,
     instructions: task.instructions,
     model: `claude-code:${options.model ?? 'default'}`,
     environmentId: handle.manifest.environmentId,
+    seed: options.seed,
     startedAt,
     finishedAt: new Date().toISOString(),
     steps,

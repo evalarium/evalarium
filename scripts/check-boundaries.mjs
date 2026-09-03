@@ -13,6 +13,8 @@ const LAYER_BY_PATH = new Map([
   ['packages/runtime', 3],
   ['packages/verify', 4],
   ['packages/adapter-browsergym', 4],
+  ['packages/inspector', 4],
+  ['packages/mcp', 4],
   ['packages/packager', 4],
 ]);
 

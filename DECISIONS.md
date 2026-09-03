@@ -2,6 +2,62 @@
 
 Every non-trivial scaffold decision is recorded here. Newest entries appear first.
 
+## 2026-09-03 — Concurrent serving isolates the whole runtime session
+
+- **Decision:** Extend `evalarium serve` with a bounded collection of managed
+  sessions. Each allocation receives its own environment handle, replay proxy,
+  Chromium process, seed, diagnostic state, and deterministic CDP relay/browser
+  port pair; the original control paths and CDP relay remain unchanged.
+- **Reason:** Parallel evaluations are trustworthy only when resets, replay
+  cursors, id aliases, browsers, and request logs cannot bleed between
+  rollouts. Browser contexts sharing one replay proxy would not provide that
+  isolation.
+- **Consequence:** Four managed sessions are allowed by default, using private
+  checkout ports `4000–4007` (public export `5000–5007`). Creation fails
+  clearly at capacity, deletion and signal shutdown close all owned resources,
+  and the Python adapter can own a managed session lifecycle.
+
+## 2026-09-03 — MCP stays a thin, local runtime adapter
+
+- **Decision:** Ship `@evalarium/mcp` as a stdio server backed directly by one
+  `openEnvironment()` handle. Its bounded tool set covers fixture reset,
+  observation, browser inputs, screenshot, bundle manifest, replay coverage,
+  divergences, and request log; mutating calls return the resulting observation
+  and on-trail status.
+- **Reason:** MCP makes frozen environments immediately usable from compatible
+  agent clients without adding a provider-specific model loop or duplicating
+  runtime semantics.
+- **Consequence:** Tool calls are validated and serialized within the process.
+  The server is local-only and owns no accounts, model credentials, live-web
+  navigation tool, or hosted state.
+
+## 2026-09-03 — Interactive capture uses operator-marked phase boundaries
+
+- **Decision:** `evalarium record` accepts exactly one of `--script` and
+  `--interactive`. Interactive mode opens headed Chromium, lets the operator
+  prepare authentication and location, then reloads and records a manually
+  performed reference workflow through the existing input recorder.
+- **Reason:** First captures should not require Playwright code just to cross a
+  login flow. The prepare/replay boundary still has to remain explicit or
+  pre-login responses can poison an authenticated fixture.
+- **Consequence:** Interactive mode requires a TTY and is local-only. Failed
+  captures close the prompt, browser, proxy, and writer and remove only the new
+  partial recording directory; scripted capture remains unchanged for CI.
+
+## 2026-09-03 — Episode replay becomes an eval-aware local inspector
+
+- **Decision:** Share a versioned episode artifact contract through `core`,
+  attribute replay requests and divergences to individual agent steps, and ship
+  `evalarium inspect` as a loopback-only UI that loads local artifacts and
+  compares their DOM digests.
+- **Reason:** A generic browser recording shows what happened but not whether a
+  failure came from the agent, an off-trail request, or environmental variance.
+  Evalarium already records the necessary evidence; putting it on one timeline
+  makes deterministic failures diagnosable without a hosted data service.
+- **Consequence:** New artifacts carry schema version 1 and the environment
+  seed. The parser supplies empty step-network slices and a null seed for older
+  artifacts, so existing baseline evidence remains inspectable.
+
 ## 2026-08-27 — Give the public checkout a separate local port range
 
 - **Decision:** Keep the private source checkout on Hub `5173`, control API `3900`, public CDP relay `3922`, and derived loopback browser endpoint `3923`. `scripts/export-public.sh` rewrites those host-facing defaults in the generated public tree to `5174`, `3901`, `3924`, and `3925`, respectively.

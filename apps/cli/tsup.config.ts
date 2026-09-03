@@ -9,6 +9,8 @@ export default defineConfig({
     '@evalarium/capture',
     '@evalarium/compiler',
     '@evalarium/core',
+    '@evalarium/inspector',
+    '@evalarium/mcp',
     '@evalarium/proxy',
     '@evalarium/runtime',
     '@evalarium/verify',

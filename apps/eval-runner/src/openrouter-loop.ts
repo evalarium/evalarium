@@ -1,9 +1,11 @@
 import type { EnvironmentHandle } from '@evalarium/runtime';
 import type { TaskDefinition } from '@evalarium/verify';
+import { EPISODE_SCHEMA_VERSION } from '@evalarium/core';
 
 import {
   SYSTEM_PROMPT,
   applyAction,
+  createStepRecorder,
   observationText,
   summarizeNetwork,
   type EpisodeRecord,
@@ -134,6 +136,7 @@ export const runOpenRouterEpisode = async (
   const startedAt = new Date().toISOString();
   await handle.reset(task.fixture, options.seed);
   const steps: EpisodeStep[] = [];
+  const recordStep = createStepRecorder(handle);
   const usage = { inputTokens: 0, outputTokens: 0, cacheReadInputTokens: 0 };
   let finished = false;
 
@@ -193,11 +196,7 @@ export const runOpenRouterEpisode = async (
         content:
           'No tool call received. Use click/fill to act, or finish when done.',
       });
-      steps.push({
-        observation: await handle.observe(),
-        actions: [],
-        commentary,
-      });
+      steps.push(recordStep(await handle.observe(), [], commentary));
       continue;
     }
 
@@ -230,16 +229,18 @@ export const runOpenRouterEpisode = async (
         content: `${outcome}\n\nNew page state:\n${observationText(observation)}`,
       });
     }
-    steps.push({ observation: await handle.observe(), actions, commentary });
+    steps.push(recordStep(await handle.observe(), actions, commentary));
   }
 
   const reward = await options.verify();
   return {
+    schemaVersion: EPISODE_SCHEMA_VERSION,
     taskId: task.id,
     fixture: task.fixture,
     instructions: task.instructions,
     model,
     environmentId: handle.manifest.environmentId,
+    seed: options.seed,
     startedAt,
     finishedAt: new Date().toISOString(),
     steps,

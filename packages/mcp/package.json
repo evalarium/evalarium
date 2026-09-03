@@ -1,0 +1,33 @@
+{
+  "name": "@evalarium/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "evalarium-mcp": "./dist/bin.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src test --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@cfworker/json-schema": "4.1.1",
+    "@evalarium/core": "workspace:0.0.0",
+    "@evalarium/runtime": "workspace:0.0.0",
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@evalarium/config": "workspace:0.0.0"
+  }
+}

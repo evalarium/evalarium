@@ -216,8 +216,43 @@ try {
     await browser.close();
   }
 
+  const createManagedSession = async (seed) => {
+    const response = await fetch(`${controlUrl}/sessions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ fixture: 'default', seed }),
+    });
+    assert.equal(response.status, 201);
+    return response.json();
+  };
+  const firstSession = await createManagedSession(7);
+  const secondSession = await createManagedSession(8);
+  assert.notEqual(firstSession.id, secondSession.id);
+  assert.equal(firstSession.cdpPort, 5000);
+  assert.equal(secondSession.cdpPort, 4002);
+  const managedSessions = await (await fetch(`${controlUrl}/sessions`)).json();
+  assert.equal(managedSessions.length, 2);
+  const [firstObservation, secondObservation] = await Promise.all(
+    [firstSession, secondSession].map(async (session) => {
+      const response = await fetch(
+        `${controlUrl}/sessions/${session.id}/observation`,
+      );
+      assert.equal(response.status, 200);
+      return response.json();
+    }),
+  );
+  assert.equal(firstObservation.title, 'Evalarium Demo Shop');
+  assert.equal(secondObservation.title, 'Evalarium Demo Shop');
+  for (const session of [firstSession, secondSession]) {
+    const response = await fetch(`${controlUrl}/sessions/${session.id}`, {
+      method: 'DELETE',
+    });
+    assert.equal(response.status, 200);
+  }
+  assert.deepEqual(await (await fetch(`${controlUrl}/sessions`)).json(), []);
+
   process.stdout.write(
-    `Docker smoke passed: control=${controlPort}, cdp=${cdpPort}, exact=${coverage.exactRate}.\n`,
+    `Docker smoke passed: control=${controlPort}, cdp=${cdpPort}, managed=2, exact=${coverage.exactRate}.\n`,
   );
 } finally {
   if (fixture !== null) {

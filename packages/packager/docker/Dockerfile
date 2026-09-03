@@ -2,7 +2,7 @@
 # frozen environment bundle:
 #
 #   docker build -f packages/packager/docker/Dockerfile -t evalarium-env .
-#   docker run --rm -p 3901:3901 -p 3924:3924 \
+#   docker run --rm -p 3901:3901 -p 3924:3924 -p 5000-5007:5000-5007 \
 #     -v /path/to/name.evalbundle:/bundle:ro evalarium-env
 #
 # The control API listens on 3901 and the frozen browser's CDP endpoint on
@@ -30,6 +30,6 @@ ENV EVALARIUM_CHROMIUM_PATH=/usr/bin/chromium \
     NODE_ENV=production
 WORKDIR /evalarium
 COPY --from=build /deploy .
-EXPOSE 3901 3924
+EXPOSE 3901 3924 5000-5007
 ENTRYPOINT ["dumb-init", "node", "dist/index.js"]
 CMD ["serve", "/bundle", "--host", "0.0.0.0", "--port", "3901", "--cdp-port", "3924"]

@@ -1,42 +1,43 @@
 import type Anthropic from '@anthropic-ai/sdk';
+import {
+  EPISODE_SCHEMA_VERSION,
+  type EpisodeArtifact,
+  type EpisodeNetworkSummary,
+  type EpisodeObservation,
+  type EpisodeStep,
+} from '@evalarium/core';
 import type { EnvironmentHandle, Observation } from '@evalarium/runtime';
 import type { TaskDefinition } from '@evalarium/verify';
 
-export interface EpisodeStep {
-  readonly observation: Observation;
-  readonly actions: readonly Record<string, unknown>[];
-  readonly commentary: string;
-}
+export type EpisodeRecord = EpisodeArtifact;
+export type { EpisodeStep };
 
-export interface EpisodeNetworkSummary {
-  readonly coverage: {
-    readonly totalRequests: number;
-    readonly exactHits: number;
-    readonly fallbacks: number;
-    readonly misses: number;
-    readonly stubs: number;
+export const createStepRecorder = (
+  handle: EnvironmentHandle,
+): ((
+  observation: EpisodeObservation,
+  actions: readonly Record<string, unknown>[],
+  commentary: string,
+) => EpisodeStep) => {
+  let requestOffset = 0;
+  let divergenceOffset = 0;
+  return (observation, actions, commentary) => {
+    const requests = handle.requestLog();
+    const divergences = handle.divergences();
+    const step = {
+      observation,
+      actions: [...actions],
+      commentary,
+      network: {
+        requests: requests.slice(requestOffset),
+        divergences: divergences.slice(divergenceOffset),
+      },
+    };
+    requestOffset = requests.length;
+    divergenceOffset = divergences.length;
+    return step;
   };
-  readonly operations: Readonly<Record<string, Record<string, number>>>;
-}
-
-export interface EpisodeRecord {
-  readonly taskId: string;
-  readonly fixture: string;
-  readonly instructions: string;
-  readonly model: string;
-  readonly environmentId: string;
-  readonly startedAt: string;
-  readonly finishedAt: string;
-  readonly steps: readonly EpisodeStep[];
-  readonly finished: boolean;
-  readonly reward: number;
-  readonly network: EpisodeNetworkSummary;
-  readonly usage: {
-    readonly inputTokens: number;
-    readonly outputTokens: number;
-    readonly cacheReadInputTokens: number;
-  };
-}
+};
 
 export const summarizeNetwork = (
   handle: EnvironmentHandle,
@@ -163,6 +164,7 @@ export const runEpisode = async (
   const startedAt = new Date().toISOString();
   await handle.reset(task.fixture, options.seed);
   const steps: EpisodeStep[] = [];
+  const recordStep = createStepRecorder(handle);
   const usage = { inputTokens: 0, outputTokens: 0, cacheReadInputTokens: 0 };
   let finished = false;
 
@@ -209,11 +211,7 @@ export const runEpisode = async (
         content:
           'No tool call received. Use click/fill to act, or finish when done.',
       });
-      steps.push({
-        observation: await handle.observe(),
-        actions: [],
-        commentary,
-      });
+      steps.push(recordStep(await handle.observe(), [], commentary));
       continue;
     }
 
@@ -241,16 +239,18 @@ export const runEpisode = async (
       });
     }
     messages.push({ role: 'user', content: results });
-    steps.push({ observation: await handle.observe(), actions, commentary });
+    steps.push(recordStep(await handle.observe(), actions, commentary));
   }
 
   const reward = await options.verify();
   return {
+    schemaVersion: EPISODE_SCHEMA_VERSION,
     taskId: task.id,
     fixture: task.fixture,
     instructions: task.instructions,
     model,
     environmentId: handle.manifest.environmentId,
+    seed: options.seed,
     startedAt,
     finishedAt: new Date().toISOString(),
     steps,

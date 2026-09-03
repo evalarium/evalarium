@@ -12,6 +12,24 @@ export type {
   SeedDefaults,
 } from './bundle.js';
 export {
+  EPISODE_SCHEMA_VERSION,
+  EpisodeArtifactSchema,
+  EpisodeNetworkSummarySchema,
+  EpisodeObservationSchema,
+  EpisodeStepNetworkSchema,
+  EpisodeStepSchema,
+  EpisodeUsageSchema,
+  parseEpisodeArtifact,
+} from './episode.js';
+export type {
+  EpisodeArtifact,
+  EpisodeNetworkSummary,
+  EpisodeObservation,
+  EpisodeStep,
+  EpisodeStepNetwork,
+  EpisodeUsage,
+} from './episode.js';
+export {
   ClickEventSchema,
   InputEventSchema,
   NavigateEventSchema,
