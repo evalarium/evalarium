@@ -229,7 +229,7 @@ try {
   const secondSession = await createManagedSession(8);
   assert.notEqual(firstSession.id, secondSession.id);
   assert.equal(firstSession.cdpPort, 5000);
-  assert.equal(secondSession.cdpPort, 4002);
+  assert.equal(secondSession.cdpPort, 5002);
   const managedSessions = await (await fetch(`${controlUrl}/sessions`)).json();
   assert.equal(managedSessions.length, 2);
   const [firstObservation, secondObservation] = await Promise.all(
