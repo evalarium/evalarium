@@ -1,6 +1,9 @@
+import { EventEmitter } from 'node:events';
+
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  rejectOnInterrupt,
   resolveRecordMode,
   type InteractivePrompter,
   type RecordModeDependencies,
@@ -39,6 +42,22 @@ describe('recording modes', () => {
 
     expect(mode.headless).toBe(true);
     expect(deps.loadScript).toHaveBeenCalledWith('record.js');
+  });
+
+  it('turns an operator interrupt into a rejected prompt', async () => {
+    const terminal = new EventEmitter();
+    const pending = rejectOnInterrupt(new Promise<void>(() => undefined), [
+      terminal,
+    ]);
+    terminal.emit('SIGINT');
+    await expect(pending).rejects.toThrow(/cancelled by the operator/u);
+    expect(terminal.listenerCount('SIGINT')).toBe(0);
+
+    const completed = await rejectOnInterrupt(Promise.resolve('done'), [
+      terminal,
+    ]);
+    expect(completed).toBe('done');
+    expect(terminal.listenerCount('SIGINT')).toBe(0);
   });
 
   it('orders interactive preparation, workflow, and cleanup', async () => {

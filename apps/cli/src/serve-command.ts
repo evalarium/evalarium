@@ -12,9 +12,26 @@ export interface ServeCommandOptions {
   readonly cdpPort: string;
   readonly sessionCdpStart: string;
   readonly maxSessions: string;
+  readonly sessionIdleTimeout: string;
   readonly host: string;
   readonly headed?: boolean;
 }
+
+const MAX_IDLE_TIMEOUT_SECONDS = 86_400;
+
+const parseIdleTimeoutSeconds = (rawValue: string): number => {
+  const value = Number(rawValue);
+  if (
+    !Number.isInteger(value) ||
+    value < 0 ||
+    value > MAX_IDLE_TIMEOUT_SECONDS
+  ) {
+    throw new Error(
+      `session-idle-timeout must be an integer between 0 and ${MAX_IDLE_TIMEOUT_SECONDS} seconds.`,
+    );
+  }
+  return value;
+};
 
 const parsePort = (rawValue: string, name: string): number => {
   const value = Number(rawValue);
@@ -43,6 +60,9 @@ export const serveCommand = async (
     'session-cdp-start',
   );
   const maxSessions = parseMaxSessions(options.maxSessions);
+  const idleTimeoutSeconds = parseIdleTimeoutSeconds(
+    options.sessionIdleTimeout,
+  );
   // Chromium binds CDP on loopback. Every public relay gets an adjacent,
   // loopback-only browser port.
   const internalCdpPort = cdpPort === 65_535 ? cdpPort - 1 : cdpPort + 1;
@@ -78,6 +98,7 @@ export const serveCommand = async (
       headless,
       maxSessions,
       sessionCdpStart,
+      idleTimeoutMs: idleTimeoutSeconds * 1_000,
     });
     control = await startControlServer({
       host: options.host,
@@ -91,6 +112,7 @@ export const serveCommand = async (
         `  control  ${control.url}\n` +
         `  cdp      http://${options.host}:${cdpPort}\n` +
         `  sessions up to ${maxSessions} (CDP ${sessionCdpStart}-${sessionCdpStart + maxSessions * 2 - 1})\n` +
+        `  idle     ${idleTimeoutSeconds === 0 ? 'sessions are never reaped' : `sessions close after ${idleTimeoutSeconds} s without control calls or CDP connections`}\n` +
         `  fixtures ${environment.manifest.fixtures.map((fixture) => fixture.name).join(', ')}\n`,
     );
 

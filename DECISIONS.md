@@ -2,6 +2,19 @@
 
 Every non-trivial scaffold decision is recorded here. Newest entries appear first.
 
+## 2026-09-03 — Concurrent determinism is measured, not assumed
+
+- **Decision:** The offline e2e runs two `evalarium determinism` processes
+  at once on the demo-shop bundle and requires both to reproduce the
+  sequential hash. The frozen Twenty bundles were measured the same way by
+  hand and the result is recorded in `CLAIMS.md`.
+- **Reason:** Managed sessions run several Chromiums on one machine. The
+  2026-08-19 bimodal-hash incident was a timing race, and CPU contention
+  between parallel browsers is the load most likely to re-expose one. An
+  isolation claim without a concurrent measurement would be an assumption.
+- **Consequence:** A concurrency-induced hash split fails the e2e before it
+  can reach a claim. The e2e takes about a minute longer.
+
 ## 2026-09-03 — Concurrent serving isolates the whole runtime session
 
 - **Decision:** Extend `evalarium serve` with a bounded collection of managed

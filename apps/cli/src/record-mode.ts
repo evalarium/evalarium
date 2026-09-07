@@ -1,3 +1,4 @@
+import type { EventEmitter } from 'node:events';
 import { createInterface } from 'node:readline/promises';
 
 import type { CaptureScript } from '@evalarium/capture';
@@ -25,6 +26,42 @@ export interface RecordModeDependencies {
   readonly createPrompter: () => InteractivePrompter;
 }
 
+/**
+ * Rejects the pending prompt when the operator interrupts. A TTY readline
+ * swallows Ctrl-C and emits `SIGINT` on the interface instead of the
+ * process, so both emitters are watched. Turning the interrupt into a
+ * rejection lets the recording command run its normal cleanup and remove
+ * the partial output instead of exiting mid-write.
+ */
+export const rejectOnInterrupt = <T>(
+  operation: Promise<T>,
+  emitters: readonly EventEmitter[],
+): Promise<T> =>
+  new Promise<T>((resolve, reject) => {
+    const detach = (): void => {
+      for (const emitter of emitters) {
+        emitter.off('SIGINT', onInterrupt);
+      }
+    };
+    const onInterrupt = (): void => {
+      detach();
+      reject(new Error('Recording cancelled by the operator.'));
+    };
+    for (const emitter of emitters) {
+      emitter.on('SIGINT', onInterrupt);
+    }
+    operation.then(
+      (value) => {
+        detach();
+        resolve(value);
+      },
+      (error: unknown) => {
+        detach();
+        reject(error instanceof Error ? error : new Error(String(error)));
+      },
+    );
+  });
+
 const createTerminalPrompter = (): InteractivePrompter => {
   if (process.stdin.isTTY !== true || process.stdout.isTTY !== true) {
     throw new Error(
@@ -37,7 +74,10 @@ const createTerminalPrompter = (): InteractivePrompter => {
   });
   return {
     wait: async (message) => {
-      await readline.question(`${message}\nPress Enter to continue… `);
+      await rejectOnInterrupt(
+        readline.question(`${message}\nPress Enter to continue… `),
+        [readline, process],
+      );
     },
     close: () => readline.close(),
   };

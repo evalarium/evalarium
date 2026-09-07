@@ -1,4 +1,5 @@
 import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { request as httpRequest } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -6,6 +7,27 @@ import { describe, expect, it } from 'vitest';
 
 import { firstDifferingStep } from '../src/compare.js';
 import { discoverEpisodeFiles, loadEpisodes } from '../src/server/episodes.js';
+import { startInspectorServer } from '../src/server/server.js';
+
+const statusWithHost = (url: string, hostHeader: string): Promise<number> =>
+  new Promise((resolve, reject) => {
+    const target = new URL('/api/episodes', url);
+    const pending = httpRequest(
+      {
+        host: target.hostname,
+        port: target.port,
+        path: target.pathname,
+        method: 'GET',
+        headers: { host: hostHeader },
+      },
+      (response) => {
+        response.resume();
+        resolve(response.statusCode ?? 0);
+      },
+    );
+    pending.once('error', reject);
+    pending.end();
+  });
 
 const episode = (digests: readonly string[]) => ({
   taskId: 'task-1',
@@ -57,6 +79,32 @@ describe('episode inspection', () => {
     expect(files[0]).toMatch(/one\.episode\.json$/u);
     const loaded = await loadEpisodes(directory);
     expect(loaded[0]?.artifact.seed).toBeNull();
+  });
+
+  it('serves loopback Host headers only', async () => {
+    const directory = await mkdtemp(
+      path.join(tmpdir(), 'evalarium-inspector-'),
+    );
+    await writeFile(
+      path.join(directory, 'one.episode.json'),
+      JSON.stringify(episode(['same'])),
+    );
+    const server = await startInspectorServer(directory, {
+      host: '127.0.0.1',
+      port: 0,
+      assetsDirectory: directory,
+    });
+    try {
+      const { port } = new URL(server.url);
+      expect(await statusWithHost(server.url, `127.0.0.1:${port}`)).toBe(200);
+      expect(await statusWithHost(server.url, `localhost:${port}`)).toBe(200);
+      expect(await statusWithHost(server.url, `[::1]:${port}`)).toBe(200);
+      expect(await statusWithHost(server.url, `rebound.example:${port}`)).toBe(
+        403,
+      );
+    } finally {
+      await server.close();
+    }
   });
 
   it('finds the first differing DOM step', () => {

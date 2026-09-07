@@ -5,6 +5,7 @@ import {
 } from 'node:http';
 
 import {
+  SessionClosingError,
   SessionInputError,
   type EnvironmentSession,
 } from './environment-session.js';
@@ -37,6 +38,9 @@ const statusForError = (error: unknown): number => {
   }
   if (error instanceof SessionNotFoundError) {
     return 404;
+  }
+  if (error instanceof SessionClosingError) {
+    return 409;
   }
   if (error instanceof SessionCapacityError) {
     return 429;

@@ -6,7 +6,11 @@ import {
   type EpisodeObservation,
   type EpisodeStep,
 } from '@evalarium/core';
-import type { EnvironmentHandle, Observation } from '@evalarium/runtime';
+import {
+  ACTION_SETTLE_MS,
+  type EnvironmentHandle,
+  type Observation,
+} from '@evalarium/runtime';
 import type { TaskDefinition } from '@evalarium/verify';
 
 export type EpisodeRecord = EpisodeArtifact;
@@ -19,8 +23,11 @@ export const createStepRecorder = (
   actions: readonly Record<string, unknown>[],
   commentary: string,
 ) => EpisodeStep) => {
-  let requestOffset = 0;
-  let divergenceOffset = 0;
+  // Offsets start at the current log lengths: the fixture boot performed by
+  // reset() has already filled the proxy log, and that traffic belongs to the
+  // environment, not to the agent's first action.
+  let requestOffset = handle.requestLog().length;
+  let divergenceOffset = handle.divergences().length;
   return (observation, actions, commentary) => {
     const requests = handle.requestLog();
     const divergences = handle.divergences();
@@ -140,7 +147,7 @@ export const applyAction = async (
         .first()
         .fill(String(input.value), { timeout: 10_000 });
     }
-    await handle.page.waitForTimeout(1_500);
+    await handle.page.waitForTimeout(ACTION_SETTLE_MS);
     return 'ok';
   } catch (error) {
     return `action failed: ${(error as Error).message.split('\n')[0] ?? 'unknown'}`;

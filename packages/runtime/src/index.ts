@@ -1,5 +1,6 @@
 export { openEnvironment } from './open-environment.js';
 export { hashObservationStream, observePage } from './observation.js';
+export { ACTION_SETTLE_MS } from './settle.js';
 export { playTrace } from './trace-player.js';
 export type { PlayTraceOptions } from './trace-player.js';
 export { RUNTIME_CLOCK_MODE } from './types.js';

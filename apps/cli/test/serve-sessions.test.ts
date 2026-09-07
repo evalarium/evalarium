@@ -8,7 +8,10 @@ import {
   startControlServer,
   type ControlServer,
 } from '../src/serve/control-server.js';
-import { EnvironmentSession } from '../src/serve/environment-session.js';
+import {
+  EnvironmentSession,
+  SessionClosingError,
+} from '../src/serve/environment-session.js';
 import {
   SessionPool,
   validateSessionPortRange,
@@ -80,7 +83,7 @@ const createPool = () => {
     },
     startRelay: async (publicPort) => {
       relayPorts.push(publicPort);
-      return { close: async () => undefined };
+      return { activeConnections: () => 0, close: async () => undefined };
     },
   });
   pools.push(pool);
@@ -104,7 +107,7 @@ describe('managed environment sessions', () => {
     const legacy = new EnvironmentSession({
       id: 'legacy',
       environment: legacyEnvironment.environment,
-      relay: { close: async () => undefined },
+      relay: { activeConnections: () => 0, close: async () => undefined },
       cdpPort: 39_922,
       fixture: 'default',
       seed: 42,
@@ -186,7 +189,7 @@ describe('managed environment sessions', () => {
     const legacy = new EnvironmentSession({
       id: 'legacy',
       environment: fake.environment,
-      relay: { close: async () => undefined },
+      relay: { activeConnections: () => 0, close: async () => undefined },
       cdpPort: 39_922,
       fixture: 'default',
       seed: 42,
@@ -214,6 +217,138 @@ describe('managed environment sessions', () => {
 
     await legacy.close();
     expect(fake.close).toHaveBeenCalledOnce();
+  });
+
+  it('closes a session that finishes booting after the pool starts closing', async () => {
+    let releaseBoot: () => void = () => undefined;
+    const booted = new Promise<void>((resolve) => {
+      releaseBoot = resolve;
+    });
+    const fake = createFakeEnvironment();
+    const relayClose = vi.fn(async () => undefined);
+    const pool = new SessionPool({
+      bundlePath: '/fake/bundle',
+      host: '127.0.0.1',
+      headless: true,
+      maxSessions: 1,
+      sessionCdpStart: 41_010,
+      open: async () => {
+        await booted;
+        return fake.environment;
+      },
+      startRelay: async () => ({
+        activeConnections: () => 0,
+        close: relayClose,
+      }),
+    });
+    pools.push(pool);
+
+    const creating = pool.create();
+    const closing = pool.close();
+    releaseBoot();
+
+    await expect(creating).rejects.toThrow(/closing/u);
+    await closing;
+    expect(fake.close).toHaveBeenCalledOnce();
+    expect(relayClose).not.toHaveBeenCalled();
+    expect(pool.list()).toHaveLength(0);
+    await expect(pool.create()).rejects.toThrow(/closing/u);
+  });
+
+  it('reaps sessions idle on both the control API and the CDP relay', async () => {
+    let connections = 1;
+    const fake = createFakeEnvironment();
+    const idleTimeoutMs = 60_000;
+    const pool = new SessionPool({
+      bundlePath: '/fake/bundle',
+      host: '127.0.0.1',
+      headless: true,
+      maxSessions: 1,
+      sessionCdpStart: 41_020,
+      idleTimeoutMs,
+      open: async () => fake.environment,
+      startRelay: async () => ({
+        activeConnections: () => connections,
+        close: async () => undefined,
+      }),
+    });
+    pools.push(pool);
+    const session = await pool.create();
+    const afterTimeout = () => Date.now() + idleTimeoutMs + 1_000;
+
+    // An open CDP connection keeps a session alive regardless of control
+    // API silence.
+    expect(await pool.sweepIdleSessions(afterTimeout())).toEqual([]);
+    connections = 0;
+    await session.observe();
+    expect(await pool.sweepIdleSessions(Date.now() + 1_000)).toEqual([]);
+    expect(await pool.sweepIdleSessions(afterTimeout())).toEqual([session.id]);
+    expect(fake.close).toHaveBeenCalledOnce();
+    expect(pool.list()).toHaveLength(0);
+  });
+
+  it('blocks a slot whose relay port another process occupies', async () => {
+    const environments: ReturnType<typeof createFakeEnvironment>[] = [];
+    const pool = new SessionPool({
+      bundlePath: '/fake/bundle',
+      host: '127.0.0.1',
+      headless: true,
+      maxSessions: 2,
+      sessionCdpStart: 41_030,
+      open: async () => {
+        const fake = createFakeEnvironment();
+        environments.push(fake);
+        return fake.environment;
+      },
+      startRelay: async (publicPort) => {
+        if (publicPort === 41_030) {
+          throw Object.assign(new Error('listen EADDRINUSE'), {
+            code: 'EADDRINUSE',
+          });
+        }
+        return { activeConnections: () => 0, close: async () => undefined };
+      },
+    });
+    pools.push(pool);
+
+    const session = await pool.create();
+    expect(session.cdpPort).toBe(41_032);
+    // The browser opened for the blocked slot was closed, not leaked.
+    expect(environments).toHaveLength(2);
+    expect(environments[0]?.close).toHaveBeenCalledOnce();
+    expect(pool.blockedPorts()).toEqual([41_030]);
+    await expect(pool.create()).rejects.toThrow(
+      /capacity exhausted \(maximum 2\)\. CDP port 41030 is occupied/u,
+    );
+  });
+
+  it('reports a closing session as a conflict', async () => {
+    const fake = createFakeEnvironment();
+    const pool = createPool();
+    const server = await startControlServer({
+      host: '127.0.0.1',
+      port: 0,
+      legacy: new EnvironmentSession({
+        id: 'legacy',
+        environment: fake.environment,
+        relay: { activeConnections: () => 0, close: async () => undefined },
+        cdpPort: 39_922,
+        fixture: 'default',
+        seed: 42,
+      }),
+      sessions: pool.pool,
+    });
+    servers.push(server);
+    const session = await pool.pool.create();
+    const closing = session.close();
+    await expect(session.observe()).rejects.toBeInstanceOf(SessionClosingError);
+    await closing;
+    // The pool still lists it until delete runs; the control server maps
+    // the closing state to 409 rather than 500.
+    const response = await fetch(
+      `${server.url}/sessions/${session.id}/observation`,
+    );
+    expect(response.status).toBe(409);
   });
 
   it('rejects overlapping or overflowing session port ranges', () => {

@@ -1,4 +1,4 @@
-import type { EnvironmentHandle } from '@evalarium/runtime';
+import { ACTION_SETTLE_MS, type EnvironmentHandle } from '@evalarium/runtime';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
@@ -58,7 +58,7 @@ export const registerBrowserTools = (
           .locator(selector)
           .first()
           .click({ timeout: timeoutMs });
-        await environment.page.waitForTimeout(300);
+        await environment.page.waitForTimeout(ACTION_SETTLE_MS);
         return jsonResult(await actionResult(environment));
       }),
   );
@@ -80,7 +80,7 @@ export const registerBrowserTools = (
           .locator(selector)
           .first()
           .fill(value, { timeout: timeoutMs });
-        await environment.page.waitForTimeout(300);
+        await environment.page.waitForTimeout(ACTION_SETTLE_MS);
         return jsonResult(await actionResult(environment));
       }),
   );
@@ -106,7 +106,7 @@ export const registerBrowserTools = (
             .first()
             .press(key, { timeout: timeoutMs });
         }
-        await environment.page.waitForTimeout(300);
+        await environment.page.waitForTimeout(ACTION_SETTLE_MS);
         return jsonResult(await actionResult(environment));
       }),
   );

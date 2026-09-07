@@ -9,7 +9,8 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --max-warnings 0"
+    "lint": "eslint src test --max-warnings 0",
+    "test": "vitest run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.122.0",

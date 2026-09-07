@@ -9,6 +9,7 @@ import type { EnvironmentHandle, Observation } from '@evalarium/runtime';
 import type { CdpRelay } from './cdp-relay.js';
 
 export class SessionInputError extends Error {}
+export class SessionClosingError extends Error {}
 
 export interface EnvironmentSessionOptions {
   readonly id: string;
@@ -25,6 +26,7 @@ export interface SessionDescription {
   readonly seed: number;
   readonly cdpPort: number;
   readonly createdAt: string;
+  readonly lastActivityAt: string;
 }
 
 export class EnvironmentSession {
@@ -35,6 +37,7 @@ export class EnvironmentSession {
   readonly cdpPort: number;
   #fixture: string;
   #seed: number;
+  #lastActivityAt = Date.now();
   #operations: Promise<void> = Promise.resolve();
   #closePromise: Promise<void> | null = null;
 
@@ -58,7 +61,21 @@ export class EnvironmentSession {
       seed: this.#seed,
       cdpPort: this.cdpPort,
       createdAt: this.#createdAt,
+      lastActivityAt: new Date(this.#lastActivityAt).toISOString(),
     };
+  }
+
+  /**
+   * A session is idle when no control call has touched it for the timeout
+   * and no CDP client is connected. An agent driving the browser over CDP
+   * without calling the control API therefore never counts as idle; a
+   * crashed client's dropped socket starts the clock.
+   */
+  isIdle(now: number, idleTimeoutMs: number): boolean {
+    return (
+      this.#relay.activeConnections() === 0 &&
+      now - this.#lastActivityAt >= idleTimeoutMs
+    );
   }
 
   observe(): Promise<Observation> {
@@ -111,8 +128,11 @@ export class EnvironmentSession {
 
   #enqueue<T>(operation: () => Promise<T>): Promise<T> {
     if (this.#closePromise !== null) {
-      return Promise.reject(new Error(`Session ${this.id} is closing.`));
+      return Promise.reject(
+        new SessionClosingError(`Session ${this.id} is closing.`),
+      );
     }
+    this.#lastActivityAt = Date.now();
     const result = this.#operations.then(operation, operation);
     this.#operations = result.then(
       () => undefined,

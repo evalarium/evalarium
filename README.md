@@ -4,6 +4,8 @@
 
 Evalarium produces resettable, instrumented browser environments for agent evaluation and training.
 
+84-second demo of a real CRM running with its backend stopped: [evalarium.ai](https://evalarium.ai). Every number quoted anywhere is in [CLAIMS.md](./CLAIMS.md); every capture and replay decision is in [DECISIONS.md](./DECISIONS.md).
+
 ## Quickstart
 
 Requirements:
@@ -22,7 +24,7 @@ pnpm e2e
 
 Set `EVALARIUM_CHROMIUM_PATH` if Chrome is not installed in a standard location.
 
-The end-to-end command starts the bundled demo shop, records a scripted checkout, stops the origin, compiles the recording, and runs replay, verification, and five determinism episodes fully offline.
+The end-to-end command starts the bundled demo shop, records a scripted checkout, stops the origin, compiles the recording, and runs replay, verification, and five determinism episodes fully offline. It is the fastest way to see the whole loop: the demo shop is deliberately determinism-hostile (wall-clock rendering, `Math.random` order ids, timer-delayed UI, localStorage cart), and the run ends with one observation hash across five episodes, then a `--no-shims` control run in which the hashes diverge.
 
 The private source checkout uses `5173` for the Hub, `3900` for the
 frozen-environment control API, and `3922` for its compatibility CDP relay;
@@ -100,10 +102,12 @@ with an optional `fixture` and `seed`; use the returned id under
 and `DELETE /sessions/:id` when done. `GET /sessions` lists live sessions.
 Each session owns a replay proxy, browser, CDP relay pair, and diagnostic state.
 The default maximum is four managed sessions in addition to the compatibility
-session.
+session. A managed session with no control call and no open CDP connection
+for `--session-idle-timeout` seconds (default 600, `0` disables) is closed
+automatically, so crashed clients do not pin slots.
 
 ## Development-only proxy security
 
 Recording and replay use a generated self-signed certificate authority and launch Chromium with proxy flags and HTTPS certificate errors ignored. This is suitable only for a trusted local development environment. Evalarium does not install the CA in the operating system trust store.
 
-See [DECISIONS.md](./DECISIONS.md) and the [project wiki](./wiki/Home.md) for contract and operational details.
+See [DECISIONS.md](./DECISIONS.md) for the decision log and [CLAIMS.md](./CLAIMS.md) for the measured claims and how they were taken.

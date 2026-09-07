@@ -17,13 +17,17 @@ Playwright-based agent stack (BrowserGym included) can attach to it:
     observation = env.observe()
     env.close()
 
-For an isolated managed session, let the wrapper create and later delete it:
+For an isolated managed session, let the wrapper create and later delete it.
+The context manager deletes the session even when the episode raises:
 
-    env = EvalariumEnv.create_session(
+    with EvalariumEnv.create_session(
         "http://localhost:3901", fixture="default", seed=42
-    )
-    observation = env.observe()
-    env.close()
+    ) as env:
+        observation = env.observe()
+
+The server also reaps a managed session that has had no control call and no
+CDP connection for `--session-idle-timeout` seconds (default 600), so a
+client that crashes without closing does not pin a slot until restart.
 """
 
 from __future__ import annotations
@@ -143,6 +147,12 @@ class EvalariumEnv:
         except Exception:
             root_control.delete_session(description["id"])
             raise
+
+    def __enter__(self) -> "EvalariumEnv":
+        return self
+
+    def __exit__(self, exc_type, exc, traceback) -> None:
+        self.close()
 
     def reset(self, fixture: str | None = None, seed: int | None = None) -> dict:
         observation = self.control.reset(fixture=fixture, seed=seed)

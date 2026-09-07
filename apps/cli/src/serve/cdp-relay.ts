@@ -1,6 +1,8 @@
 import { connect, createServer, type Socket } from 'node:net';
 
 export interface CdpRelay {
+  /** Open client connections; used to tell a live agent from a dead one. */
+  activeConnections(): number;
   close(): Promise<void>;
 }
 
@@ -16,13 +18,16 @@ export const startCdpRelay: StartCdpRelay = async (
   host,
 ) => {
   const sockets = new Set<Socket>();
+  const clients = new Set<Socket>();
   const server = createServer((socket) => {
     const upstream = connect(internalPort, '127.0.0.1');
+    clients.add(socket);
     sockets.add(socket);
     sockets.add(upstream);
     socket.pipe(upstream);
     upstream.pipe(socket);
     const teardown = (): void => {
+      clients.delete(socket);
       sockets.delete(socket);
       sockets.delete(upstream);
       socket.destroy();
@@ -44,6 +49,7 @@ export const startCdpRelay: StartCdpRelay = async (
 
   let closePromise: Promise<void> | null = null;
   return {
+    activeConnections: () => clients.size,
     close: () => {
       closePromise ??= new Promise<void>((resolve, reject) => {
         for (const socket of sockets) {

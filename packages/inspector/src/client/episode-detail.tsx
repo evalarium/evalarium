@@ -99,8 +99,11 @@ export function EpisodeDetail({ episode }: EpisodeDetailProps) {
                   ))
                 )}
               </div>
-              {step.network.divergences.map((divergence) => (
-                <div className="divergence" key={divergence.fingerprint}>
+              {step.network.divergences.map((divergence, divergenceIndex) => (
+                <div
+                  className="divergence"
+                  key={`${divergenceIndex}-${divergence.fingerprint}`}
+                >
                   Divergence: {divergence.method} {divergence.url}
                 </div>
               ))}

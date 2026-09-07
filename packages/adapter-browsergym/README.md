@@ -14,11 +14,14 @@ session through the same wrapper. Closing an owned session deletes it from the
 server:
 
 ```python
-env = EvalariumEnv.create_session(
+with EvalariumEnv.create_session(
     "http://localhost:3901", fixture="default", seed=42
-)
-try:
+) as env:
     observation = env.observe()
-finally:
-    env.close()
 ```
+
+Leaving the `with` block deletes the session. If a client dies without
+closing, the server reaps the session once it has had no control call and no
+open CDP connection for `--session-idle-timeout` seconds (default 600; `0`
+disables). An agent that only drives the browser over CDP is never reaped
+while its connection stays open.

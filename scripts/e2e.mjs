@@ -127,9 +127,27 @@ try {
     '--seed',
     '42',
   ]);
-  assert.match(
-    determinismOutput,
-    /determinism hash identical across 5 episodes/u,
+  const determinismHash =
+    /determinism hash identical across 5 episodes: ([a-f0-9]{64})/u.exec(
+      determinismOutput,
+    )?.[1];
+  assert.ok(determinismHash, 'Sequential determinism hash missing.');
+
+  // Two determinism runs at once. Each owns a replay proxy and a Chromium,
+  // the same shape as two managed sessions; CPU contention between parallel
+  // browsers must not move the hash.
+  const concurrentOutputs = await Promise.all([
+    runCli(['determinism', bundlePath, '--episodes', '5', '--seed', '42']),
+    runCli(['determinism', bundlePath, '--episodes', '5', '--seed', '42']),
+  ]);
+  for (const output of concurrentOutputs) {
+    assert.match(
+      output,
+      new RegExp(`identical across 5 episodes: ${determinismHash}`, 'u'),
+    );
+  }
+  process.stdout.write(
+    'Concurrent determinism runs reproduced the sequential hash.\n',
   );
 
   const noShimsOutput = await runCli([

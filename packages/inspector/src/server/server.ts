@@ -24,6 +24,41 @@ const contentTypes: Readonly<Record<string, string>> = {
   '.svg': 'image/svg+xml',
 };
 
+const LOOPBACK_HOSTNAMES: ReadonlySet<string> = new Set([
+  'localhost',
+  '127.0.0.1',
+  '[::1]',
+]);
+const LOOPBACK_BIND_ADDRESSES: ReadonlySet<string> = new Set([
+  'localhost',
+  '127.0.0.1',
+  '::1',
+]);
+
+/**
+ * A page on any origin can be pointed at a loopback bind through DNS
+ * rebinding; the Host header is the only thing that distinguishes such a
+ * request from the operator's own browser. Loopback binds therefore accept
+ * loopback names only. Non-loopback binds are reachable by whatever
+ * addresses the operator chose, so the check does not apply there.
+ */
+const isAllowedHost = (
+  hostHeader: string | undefined,
+  boundHost: string,
+): boolean => {
+  if (!LOOPBACK_BIND_ADDRESSES.has(boundHost)) {
+    return true;
+  }
+  if (hostHeader === undefined) {
+    return false;
+  }
+  try {
+    return LOOPBACK_HOSTNAMES.has(new URL(`http://${hostHeader}`).hostname);
+  } catch {
+    return false;
+  }
+};
+
 const send = (
   response: ServerResponse,
   status: number,
@@ -51,6 +86,15 @@ export const startInspectorServer = async (
   );
   const server = createServer((request, response) => {
     void (async () => {
+      if (!isAllowedHost(request.headers.host, host)) {
+        send(
+          response,
+          403,
+          'application/json; charset=utf-8',
+          '{"error":"Host header must name this loopback server."}',
+        );
+        return;
+      }
       const url = new URL(request.url ?? '/', `http://${request.headers.host}`);
       if (request.method !== 'GET') {
         send(response, 405, 'application/json', '{"error":"GET required"}');

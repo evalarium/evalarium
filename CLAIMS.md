@@ -31,11 +31,21 @@ the commit that froze them.
 ## Determinism
 
 - **Hash-identical observation streams across 5 seeded episodes** on both
-  fixtures (re-verified 2026-08-19: crm-baseline `43012eb4…`,
-  pipeline-review `7f648fa9…`), replaying the full input trace under the
+  fixtures (re-verified 2026-09-03 on Chrome 152.0.7977.65: crm-baseline
+  `43012eb4…`, pipeline-review `f8d1c9a1…`; on 2026-08-19 they were
+  `43012eb4…` and `7f648fa9…`), replaying the full input trace under the
   manual virtual clock. Absolute hash values are stable for a given
   bundle and Chromium build — a browser update or a re-record shifts
   them without breaking the cross-episode identity, which is the claim.
+  The pipeline-review shift between those dates is the browser build; the
+  replay path did not change.
+- **Identity holds under concurrent sessions** (measured 2026-09-03): two
+  determinism runs started at the same moment on one machine, each owning
+  its own replay proxy and Chromium exactly as managed sessions do,
+  produced the same hash as each other and as an uncontended run on both
+  fixtures (5 episodes each, seed 42). The offline e2e now starts two
+  determinism processes at once on the demo shop and requires both to
+  reproduce the sequential hash.
 - **The no-shims control diverges where determinism has work to do**
   (re-measured 2026-08-19, 5 episodes each): on the mutation-bearing
   `pipeline-review` trace, disabling the determinism runtime sends every
@@ -66,15 +76,40 @@ seeds per task (42, 7, 1234), 25-step cap:
 - **Claude Code agent harness (claude-opus-5): 66.7%** over the complete
   14 tasks × 3 seeds (42 episodes), at zero marginal API cost
   (subscription quota).
+- **Claude Code agent harness (claude-fable-5-1): 83.3%** over the
+  complete 14 tasks × 3 seeds (42 episodes; measured 2026-09-03/04 on the
+  unchanged bundles, verifiers, seeds, and 25-step cap; zero marginal API
+  cost). 35 passes, 342 steps, 64 minutes wall clock; every episode ended
+  with an explicit finish. Opus 5 on the same harness used 396 steps and
+  91 minutes.
 
-Per-tier shape (both configs): the read tier is saturated (100%),
+Per-tier shape (both Opus 5 configs): the read tier is saturated (100%),
 single-mutation tasks mostly pass with real variance (assign 67-100%,
 create 0-33%), and the long-horizon tier discriminates hard
 (close-overdue-tasks 0%, staff-and-expand 0%, full-pipeline-review 33%,
 globex-account-sweep 0-33%).
 
-**Critical read (publication status: IN BAND).** Both configs sit inside
-the 40-80% frontier-difficulty band. Episode network forensics attribute
+Per-tier shape (Fable 5.1, Claude Code harness): read tier 100%; every
+single-mutation task 100% except create-vantage-company at 67%; the
+long-horizon tier splits — full-pipeline-review 100% (from 33%) and
+globex-account-sweep 100% (from 0%), while close-overdue-tasks and
+staff-and-expand stay at 0% on all three seeds. Those two fail with the
+same signature Opus 5 showed: the agent calls finish and reports success
+while the committing mutation never reaches the network. In
+close-overdue-tasks each episode carries one exact `UpdateOneTask` where
+the verifier needs two, after off-trail reads of a task record the
+recording never opened; in staff-and-expand `CreateOneCompany` and the
+task assignment land but the `UpdateOneCompany` that names the company
+never fires. The gap between the two generations is therefore in
+multi-entity follow-through, not in reading or single edits.
+
+**Critical read (publication status: IN BAND for Opus 5; Fable 5.1 sits
+above it).** Both Opus 5 configs sit inside the 40–80%
+frontier-difficulty band; Fable 5.1 on the Claude Code harness scores
+83.3%, so a band statement can no longer be made for the newest model
+without qualification — the suite still discriminates (two long-horizon
+tasks at 0% across both generations, seed variance on create), but the
+headline moved above the band. Episode network forensics attribute
 the hard-tier failures to genuine agent behavior — uncommitted edits
 (create fired, name never persisted, success claimed anyway),
 half-completed multi-entity flows at the step cap, and unverified

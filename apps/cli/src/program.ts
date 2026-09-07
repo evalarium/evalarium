@@ -62,6 +62,11 @@ export const createProgram = (): Command => {
       '5000',
     )
     .option('--max-sessions <count>', 'maximum managed sessions', '4')
+    .option(
+      '--session-idle-timeout <seconds>',
+      'close managed sessions with no control calls and no CDP connection for this long; 0 disables',
+      '600',
+    )
     .option('--host <host>', 'bind address', '127.0.0.1')
     .option('--headed', 'show the environment browser window')
     .action(serveCommand);

@@ -26,4 +26,6 @@ The adapter provides manifest, reset, observation, click, fill, key press,
 screenshot, coverage, divergence, and request-log tools. Mutating tools return
 the resulting observation plus `onTrail`, which is false after any replay miss.
 Tool calls for a server process are serialized so actions and observations stay
-ordered.
+ordered. Mutating tools wait the same settle delay as the eval runner before
+observing, so an MCP client and the runner see the same page state after an
+action.
